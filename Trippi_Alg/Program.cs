@@ -77,7 +77,10 @@ namespace Trippi_Alg
 
             //Konec první části, máme seznam daySections
 
+            Program pr = new Program();
+            daySections = pr.GetAllowance(daySections);
 
+            //Apply allowance calculating algorithm
 
             foreach (CountryDuration c in countryDurations)
             {
@@ -124,12 +127,14 @@ namespace Trippi_Alg
             }
         }
 
+        
+
         private List<DaySection> GetAllowance(List<DaySection> daySections)
         {
             List<DaySection> czTwoDay = GetAllowanceCZTwoDay(daySections);
             List<DaySection> cz = GetAllowanceCZ(czTwoDay);
             List<DaySection> final = GetAllowanceGeneral(cz);
-
+            
             return final;
         }
 
@@ -156,14 +161,48 @@ namespace Trippi_Alg
 
         private List<DaySection> GetAllowanceCZ(List<DaySection> daySections)
         {
+            if (IsAllowanceCZTwoDay(daySections)) return daySections;
 
+            int lastCZ = 0;
+            int countCZ = 0;
+            for (var i = 0; i < daySections.Count; i++)
+            {
+                if (daySections[i].Country.Name == "Czech Republic")
+                {
+                    lastCZ = i;
+                    countCZ += 1;
+                    daySections[i].Allowance = GetRate(daySections[i].Country, daySections[i].Duration, 0);
+                }
+            }
+
+            if(countCZ <= 1) return daySections;
+
+            foreach (DaySection d in daySections)
+            {
+                if (d.Country.Name == "Czech Republic")
+                {
+                    daySections[lastCZ].Allowance.MoneyAmount += d.Allowance.MoneyAmount;
+                    d.Allowance = null;
+                }
+            }
+            return daySections;
         }
 
+       
         private List<DaySection> GetAllowanceGeneral(List<DaySection> daySections)
         {
-
+            int lastDayIndex = daySections[daySections.Count].DayIndex;
+            foreach (DaySection d in daySections)
+            {
+                if (d.Country.Name != "Czech Republic")
+                {
+                    
+                }
+            }
+            return daySections;
         }
 
+       
         //1. Řešit CZ
         //2. Pokud má trip 2 dny tak se všechno spočítá dvakrát a vyhraje větší
         //!. Konfiguračně zapnutelné a vypnutelné
@@ -194,7 +233,7 @@ namespace Trippi_Alg
                 },
 
                 DepartureDate = Convert.ToInt64(new DateTime(2019, 3, 15, 0, 0, 0).Subtract(new DateTime(1970, 1, 1)).TotalMilliseconds),
-                DepartureTime = Convert.ToInt64(new DateTime(1970, 1, 1, 8, 0, 0).Subtract(new DateTime(1970, 1, 1)).TotalMilliseconds),
+                DepartureTime = Convert.ToInt64(new DateTime(1970, 1, 1, 1, 0, 0).Subtract(new DateTime(1970, 1, 1)).TotalMilliseconds),
 
                 Food = new LocationFood()
 
